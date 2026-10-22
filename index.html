@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PustakaKota Digital - Layanan Perpustakaan Kota</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for better visual feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col bg-slate-50">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="sticky top-0 z-30 bg-brand-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo & Title -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('catalog')">
+                    <div class="bg-brand-600 p-2 rounded-lg text-white shadow">
+                        <i class="fa-solid fa-book-bookmark text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide">PustakaKota<span class="text-brand-300">Digital</span></h1>
+                        <p class="text-xs text-brand-200">Sistem Peminjaman & Lokasi Buku</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Tabs -->
+                <nav class="hidden md:flex space-x-2">
+                    <button id="nav-catalog" onclick="switchTab('catalog')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-brand-800 text-white shadow-inner">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Katalog & Cari
+                    </button>
+                    <button id="nav-bookings" onclick="switchTab('bookings')" class="px-4 py-2 rounded-lg text-sm font-medium text-brand-100 hover:bg-brand-800 transition-all flex items-center">
+                        <i class="fa-solid fa-ticket mr-2"></i>Booking Saya
+                        <span id="booking-badge" class="ml-2 bg-amber-400 text-brand-900 text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                    <button id="nav-map" onclick="switchTab('map')" class="px-4 py-2 rounded-lg text-sm font-medium text-brand-100 hover:bg-brand-800 transition-all">
+                        <i class="fa-solid fa-map-location-dot mr-2"></i>Peta Rak Gedung
+                    </button>
+                </nav>
+
+                <!-- Status Info / User Profile Pill -->
+                <div class="hidden sm:flex items-center space-x-2 text-xs bg-brand-800/80 border border-brand-700 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-brand-100">Buka Hari Ini: 08:00 - 20:00</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-16 md:mb-6">
+
+        <!-- ================= PAGE 1: CATALOG & SEARCH ================= -->
+        <section id="page-catalog" class="space-y-6">
+            
+            <!-- Hero Banner & Quick Stats -->
+            <div class="bg-gradient-to-r from-brand-800 via-brand-700 to-indigo-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="inline-block px-3 py-1 bg-brand-500/30 border border-brand-400/30 text-brand-100 text-xs font-medium rounded-full mb-3">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Layanan Booking Mandiri Perpustakaan Kota
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">Cari Buku & Ketahui Letak Rak Sebelum Datang!</h2>
+                    <p class="text-brand-100 text-sm sm:text-base leading-relaxed mb-6">
+                        Hemat waktu Anda. Cari koleksi buku, cek ketersediaan, booking secara online, lalu ambil langsung di nomor rak dan barisan yang tertera.
+                    </p>
+
+                    <!-- Search Input Box -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                        </div>
+                        <input type="text" id="search-input" onkeyup="filterBooks()" placeholder="Ketik judul buku, nama penulis, atau nomor rak..." class="w-full pl-11 pr-24 py-3.5 bg-white text-slate-800 placeholder-slate-400 rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-400/50 text-sm sm:text-base">
+                        <button onclick="clearSearch()" id="btn-clear-search" class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 text-xs font-semibold">
+                            Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Decorative Background Pattern -->
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+                    <i class="fa-solid fa-book-open text-[240px]"></i>
+                </div>
+            </div>
+
+            <!-- Categories Filter Badges -->
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+                <div class="flex items-center space-x-2 overflow-x-auto pb-2 w-full sm:w-auto no-scrollbar" id="category-filters">
+                    <button onclick="filterCategory('Semua')" class="cat-btn active bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all whitespace-nowrap">
+                        Semua Kategori
+                    </button>
+                    <button onclick="filterCategory('Teknologi')" class="cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap">
+                        Teknologi
+                    </button>
+                    <button onclick="filterCategory('Fiksi')" class="cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap">
+                        Fiksi & Sastra
+                    </button>
+                    <button onclick="filterCategory('Sains')" class="cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap">
+                        Sains & Matematika
+                    </button>
+                    <button onclick="filterCategory('Sejarah')" class="cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap">
+                        Sejarah
+                    </button>
+                    <button onclick="filterCategory('Bisnis')" class="cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap">
+                        Bisnis & Ekonomi
+                    </button>
+                </div>
+
+                <div class="text-xs text-slate-500 font-medium ml-auto">
+                    Menampilkan <span id="book-count" class="font-bold text-slate-800">0</span> Buku
+                </div>
+            </div>
+
+            <!-- Book Cards Grid -->
+            <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Dynamically Inserted via JS -->
+            </div>
+
+            <!-- Empty State for Search -->
+            <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+                <div class="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-3">
+                    <i class="fa-solid fa-book-bookmark text-2xl"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-800">Buku Tidak Ditemukan</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Coba gunakan kata kunci pencarian lain atau pilih kategori yang berbeda.</p>
+                <button onclick="resetFilters()" class="mt-4 px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-600 text-xs font-bold rounded-lg transition-colors">
+                    Reset Filter Pencarian
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 2: MY BOOKINGS ================= -->
+        <section id="page-bookings" class="hidden space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Daftar Booking Buku Saya</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Tunjukkan tiket booking ini kepada petugas di loket atau gunakan informasi rak untuk mengambil sendiri.</p>
+                </div>
+                <button onclick="switchTab('catalog')" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 text-xs font-semibold rounded-lg transition-colors flex items-center">
+                    <i class="fa-solid fa-plus mr-1.5"></i>Tambah Booking Baru
+                </button>
+            </div>
+
+            <!-- Active Bookings List -->
+            <div id="bookings-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Empty Bookings State -->
+            <div id="empty-bookings" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                <div class="w-16 h-16 mx-auto bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-ticket text-2xl"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-800">Belum Ada Buku Yang Dibooking</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Anda belum memilih buku untuk dipinjam. Cari buku favoritmu di katalog dan lakukan booking online.</p>
+                <button onclick="switchTab('catalog')" class="mt-4 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+                    Jelajahi Katalog Buku
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 3: INTERACTIVE MAP ================= -->
+        <section id="page-map" class="hidden space-y-6">
+            <div class="border-b border-slate-200 pb-4">
+                <h2 class="text-xl font-bold text-slate-900">Panduan Denah & Tata Letak Rak Perpustakaan</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Petunjuk lokasi visual untuk memudahkan Anda mencari posisi tepat rak dan barisan buku.</p>
+            </div>
+
+            <!-- Floor Selector Tabs -->
+            <div class="flex space-x-2 border-b border-slate-200">
+                <button id="floor-1-tab" onclick="switchFloor(1)" class="px-5 py-2.5 font-semibold text-xs border-b-2 border-brand-600 text-brand-600 flex items-center">
+                    <i class="fa-solid fa-layer-group mr-2"></i>Lantai 1 (Teknologi, Fiksi & Umum)
+                </button>
+                <button id="floor-2-tab" onclick="switchFloor(2)" class="px-5 py-2.5 font-semibold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center">
+                    <i class="fa-solid fa-layer-group mr-2"></i>Lantai 2 (Sains, Sejarah & Bisnis)
+                </button>
+            </div>
+
+            <!-- Interactive Map Graphic Container -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <!-- Legend -->
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 text-xs">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center"><span class="w-3 h-3 rounded bg-blue-500 mr-1.5"></span> Rak Utama</span>
+                        <span class="flex items-center"><span class="w-3 h-3 rounded bg-emerald-500 mr-1.5"></span> Area Baca</span>
+                        <span class="flex items-center"><span class="w-3 h-3 rounded bg-amber-500 mr-1.5"></span> Meja Layanan / Loket</span>
+                    </div>
+                    <span class="text-slate-400 italic"><i class="fa-solid fa-mouse-pointer mr-1"></i> Klik pada rak untuk melihat daftar buku</span>
+                </div>
+
+                <!-- FLOOR 1 PLAN -->
+                <div id="floor-1-plan" class="space-y-6">
+                    <div class="grid grid-cols-12 gap-3 min-h-[320px] bg-slate-50 p-4 rounded-xl border border-slate-200 relative">
+                        <!-- Entrance -->
+                        <div class="col-span-12 bg-amber-100 border border-amber-300 rounded-lg p-2 text-center text-xs font-bold text-amber-800 flex items-center justify-center">
+                            <i class="fa-solid fa-door-open mr-2"></i> Pintu Masuk Utama & Meja Petugas / Loket Peminjaman
+                        </div>
+
+                        <!-- Left Shelf Column -->
+                        <div class="col-span-12 md:col-span-4 space-y-3">
+                            <div onclick="highlightShelf('Rak A1')" class="rack-card cursor-pointer p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK A1</span>
+                                <span class="text-[10px] text-blue-700">Kategori: Pemrograman & IT</span>
+                            </div>
+                            <div onclick="highlightShelf('Rak A2')" class="rack-card cursor-pointer p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK A2</span>
+                                <span class="text-[10px] text-blue-700">Kategori: Artificial Intelligence & Data</span>
+                            </div>
+                            <div onclick="highlightShelf('Rak A3')" class="rack-card cursor-pointer p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK A3</span>
+                                <span class="text-[10px] text-blue-700">Kategori: Fiksi, Novel & Sastra</span>
+                            </div>
+                        </div>
+
+                        <!-- Center Reading Area -->
+                        <div class="col-span-12 md:col-span-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                            <i class="fa-solid fa-couch text-emerald-600 text-3xl mb-2"></i>
+                            <span class="text-xs font-bold text-emerald-900">Area Membaca Lantai 1</span>
+                            <span class="text-[10px] text-emerald-700">Dilengkapi Stopkontak & Wi-Fi Gratis</span>
+                        </div>
+
+                        <!-- Right Shelf Column -->
+                        <div class="col-span-12 md:col-span-4 space-y-3">
+                            <div onclick="highlightShelf('Rak A4')" class="rack-card cursor-pointer p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK A4</span>
+                                <span class="text-[10px] text-blue-700">Kategori: Novel Fantasi & Sci-Fi</span>
+                            </div>
+                            <div onclick="highlightShelf('Rak A5')" class="rack-card cursor-pointer p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK A5</span>
+                                <span class="text-[10px] text-blue-700">Kategori: Ensiklopedia Umum</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FLOOR 2 PLAN -->
+                <div id="floor-2-plan" class="space-y-6 hidden">
+                    <div class="grid grid-cols-12 gap-3 min-h-[320px] bg-slate-50 p-4 rounded-xl border border-slate-200 relative">
+                        <!-- Left Shelf Column -->
+                        <div class="col-span-12 md:col-span-4 space-y-3">
+                            <div onclick="highlightShelf('Rak B1')" class="rack-card cursor-pointer p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-indigo-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK B1</span>
+                                <span class="text-[10px] text-indigo-700">Kategori: Sains, Fisika & Astronomi</span>
+                            </div>
+                            <div onclick="highlightShelf('Rak B2')" class="rack-card cursor-pointer p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-indigo-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK B2</span>
+                                <span class="text-[10px] text-indigo-700">Kategori: Biologi & Kedokteran</span>
+                            </div>
+                        </div>
+
+                        <!-- Center Reading Area & Stairs -->
+                        <div class="col-span-12 md:col-span-4 bg-purple-50 border border-purple-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                            <i class="fa-solid fa-graduation-cap text-purple-600 text-3xl mb-2"></i>
+                            <span class="text-xs font-bold text-purple-900">Ruang Studi Hening Lantai 2</span>
+                            <span class="text-[10px] text-purple-700">Area Khusus Diskusi & Penelitian</span>
+                        </div>
+
+                        <!-- Right Shelf Column -->
+                        <div class="col-span-12 md:col-span-4 space-y-3">
+                            <div onclick="highlightShelf('Rak B3')" class="rack-card cursor-pointer p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-indigo-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK B3</span>
+                                <span class="text-[10px] text-indigo-700">Kategori: Sejarah Dunia & Indonesia</span>
+                            </div>
+                            <div onclick="highlightShelf('Rak B4')" class="rack-card cursor-pointer p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all text-center">
+                                <span class="text-xs font-bold text-indigo-900 block"><i class="fa-solid fa-bars-staggered mr-1"></i> RAK B4</span>
+                                <span class="text-[10px] text-indigo-700">Kategori: Bisnis, Manajemen & Finansial</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <div class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 md:hidden z-30 px-2 py-2 flex justify-around items-center text-slate-500 shadow-lg">
+        <button onclick="switchTab('catalog')" id="mob-nav-catalog" class="flex flex-col items-center py-1 px-3 text-brand-600 font-bold">
+            <i class="fa-solid fa-magnifying-glass text-lg"></i>
+            <span class="text-[10px] mt-0.5">Katalog</span>
+        </button>
+        <button onclick="switchTab('bookings')" id="mob-nav-bookings" class="flex flex-col items-center py-1 px-3 relative">
+            <i class="fa-solid fa-ticket text-lg"></i>
+            <span class="text-[10px] mt-0.5">Booking</span>
+            <span id="mob-booking-badge" class="absolute top-0 right-2 bg-amber-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+        <button onclick="switchTab('map')" id="mob-nav-map" class="flex flex-col items-center py-1 px-3">
+            <i class="fa-solid fa-map-location-dot text-lg"></i>
+            <span class="text-[10px] mt-0.5">Denah Rak</span>
+        </button>
+    </div>
+
+    <!-- ================= MODAL: BOOK DETAIL & RACK LOCATION ================= -->
+    <div id="modal-book-detail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 relative">
+            
+            <!-- Close Button -->
+            <button onclick="closeBookModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Content Loaded Dynamically -->
+            <div id="modal-book-content" class="p-6">
+                <!-- Content generated via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: BOOKING FORM ================= -->
+    <div id="modal-booking-form" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 p-6 relative">
+            <button onclick="closeBookingFormModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Formulir Booking Buku</h3>
+                <p class="text-xs text-slate-500">Lengkapi data untuk mengunci ketersediaan buku ini</p>
+            </div>
+
+            <!-- Target Book Preview Card -->
+            <div id="booking-target-summary" class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 flex items-center space-x-3">
+                <!-- Target book summary via JS -->
+            </div>
+
+            <form id="booking-form" onsubmit="handleBookingSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Peminjam *</label>
+                    <input type="text" id="peminjam-nama" required placeholder="Contoh: Ahmad Rizky" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Anggota Perpus / Email *</label>
+                    <input type="text" id="peminjam-id" required placeholder="Contoh: PK-2026-889 atau nama@email.com" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Rencana Tanggal Pengambilan *</label>
+                    <input type="date" id="peminjam-tanggal" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <p class="text-[10px] text-amber-600 mt-1"><i class="fa-solid fa-clock mr-1"></i>Masa simpan booking maksimal 24 jam setelah tanggal ini.</p>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end space-x-3">
+                    <button type="button" onclick="closeBookingFormModal()" class="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow transition-all">
+                        Konfirmasi Booking Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // Sample Library Books Master Data
+        const booksData = [
+            {
+                id: 'BK001',
+                title: 'Pemrograman Dasar & Algoritma Modern',
+                author: 'Dr. Budi Santoso, M.Kom',
+                publisher: 'Informatika Press',
+                category: 'Teknologi',
+                year: '2024',
+                stock: 3,
+                floor: 1,
+                rack: 'Rak A1',
+                row: 'Barisan 2',
+                status: 'Tersedia',
+                coverColor: 'bg-indigo-600',
+                synopsis: 'Buku panduan lengkap memahami logika pemrograman, struktur data, dan konsep algoritma modern untuk pemula hingga menengah.'
+            },
+            {
+                id: 'BK002',
+                title: 'Kecerdasan Buatan & Machine Learning',
+                author: 'Prof. Rian Hidayat',
+                publisher: 'TechMedia',
+                category: 'Teknologi',
+                year: '2025',
+                stock: 2,
+                floor: 1,
+                rack: 'Rak A2',
+                row: 'Barisan 1',
+                status: 'Tersedia',
+                coverColor: 'bg-blue-600',
+                synopsis: 'Membahas penerapan praktis AI, model jaringan saraf tiruan, serta implementasi Python dalam menyelesaikan masalah nyata.'
+            },
+            {
+                id: 'BK003',
+                title: 'Laskar Pelangi',
+                author: 'Andrea Hirata',
+                publisher: 'Bentang Pustaka',
+                category: 'Fiksi',
+                year: '2005',
+                stock: 5,
+                floor: 1,
+                rack: 'Rak A3',
+                row: 'Barisan 4',
+                status: 'Tersedia',
+                coverColor: 'bg-emerald-600',
+                synopsis: 'Kisah inspiratif tentang perjuangan 10 anak di Pulau Belitung dalam meraih pendidikan di tengah keterbatasan.'
+            },
+            {
+                id: 'BK004',
+                title: 'Bumi Manusia',
+                author: 'Pramoedya Ananta Toer',
+                publisher: 'Lentera Dipantara',
+                category: 'Fiksi',
+                year: '1980',
+                stock: 1,
+                floor: 1,
+                rack: 'Rak A3',
+                row: 'Barisan 1',
+                status: 'Tersedia',
+                coverColor: 'bg-amber-700',
+                synopsis: 'Novel sejarah berlatar akhir era kolonialisme Belanda yang mengisahkan perjuangan Minke menuntut keadilan.'
+            },
+            {
+                id: 'BK005',
+                title: 'Fisika Kuantum untuk Pemula',
+                author: 'Siti Rahma, M.Sc',
+                publisher: 'Sains Nusantara',
+                category: 'Sains',
+                year: '2023',
+                stock: 4,
+                floor: 2,
+                rack: 'Rak B1',
+                row: 'Barisan 3',
+                status: 'Tersedia',
+                coverColor: 'bg-purple-600',
+                synopsis: 'Penjelasan sederhana mengenai teori kuantum, mekanika partikel, dan misteri jagat raya tanpa rumus rumit.'
+            },
+            {
+                id: 'BK006',
+                title: 'Sejarah Lengkap Nusantara',
+                author: 'Drs. Suparto',
+                publisher: 'Obor Indonesia',
+                category: 'Sejarah',
+                year: '2021',
+                stock: 2,
+                floor: 2,
+                rack: 'Rak B3',
+                row: 'Barisan 2',
+                status: 'Tersedia',
+                coverColor: 'bg-red-700',
+                synopsis: 'Catatan komprehensif perjalanan kerajaan-kerajaan di Indonesia mulai era Majapahit hingga kemerdekaan.'
+            },
+            {
+                id: 'BK007',
+                title: 'Manajemen Keuangan & Bisnis Digital',
+                author: 'Eko Prasetyo, SE, MBA',
+                publisher: 'Erlangga',
+                category: 'Bisnis',
+                year: '2024',
+                stock: 3,
+                floor: 2,
+                rack: 'Rak B4',
+                row: 'Barisan 5',
+                status: 'Tersedia',
+                coverColor: 'bg-teal-600',
+                synopsis: 'Strategi mengelola arus kas bisnis, investasi digital, serta cara membangun startup yang berkelanjutan.'
+            },
+            {
+                id: 'BK008',
+                title: 'Astronomi & Penjelajahan Angkasa',
+                author: 'Dr. Kevin Utama',
+                publisher: 'Sains Utama',
+                category: 'Sains',
+                year: '2022',
+                stock: 2,
+                floor: 2,
+                rack: 'Rak B1',
+                row: 'Barisan 1',
+                status: 'Tersedia',
+                coverColor: 'bg-sky-700',
+                synopsis: 'Mengenal sistem tata surya, galaksi, serta teknologi roket luar angkasa ciptaan manusia.'
+            }
+        ];
+
+        // State variables
+        let selectedCategory = 'Semua';
+        let currentActiveBookId = null;
+        let myBookings = JSON.parse(localStorage.getItem('pustaka_bookings')) || [];
+
+        // INITIALIZATION ON PAGE LOAD
+        window.onload = function() {
+            renderBooks();
+            updateBookingBadge();
+            setMinDateToday();
+        };
+
+        function setMinDateToday() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('peminjam-tanggal');
+            if (dateInput) {
+                dateInput.min = today;
+                dateInput.value = today;
+            }
+        }
+
+        // NAVIGATION TABS SWITCHING
+        function switchTab(tab) {
+            // Hide all pages
+            document.getElementById('page-catalog').classList.add('hidden');
+            document.getElementById('page-bookings').classList.add('hidden');
+            document.getElementById('page-map').classList.add('hidden');
+
+            // Reset Nav active styles
+            ['catalog', 'bookings', 'map'].forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+                const mobBtn = document.getElementById(`mob-nav-${t}`);
+                if (navBtn) navBtn.className = "px-4 py-2 rounded-lg text-sm font-medium text-brand-100 hover:bg-brand-800 transition-all flex items-center";
+                if (mobBtn) mobBtn.className = "flex flex-col items-center py-1 px-3 text-slate-500 relative";
+            });
+
+            // Activate chosen tab
+            document.getElementById(`page-${tab}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tab}`);
+            const activeMob = document.getElementById(`mob-nav-${tab}`);
+            
+            if (activeNav) activeNav.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all bg-brand-800 text-white shadow-inner flex items-center";
+            if (activeMob) activeMob.className = "flex flex-col items-center py-1 px-3 text-brand-600 font-bold relative";
+
+            if (tab === 'bookings') {
+                renderMyBookings();
+            }
+        }
+
+        // RENDER BOOK CATALOG
+        function renderBooks(query = '') {
+            const grid = document.getElementById('books-grid');
+            const emptyState = document.getElementById('empty-state');
+            grid.innerHTML = '';
+
+            const filtered = booksData.filter(book => {
+                const matchCategory = selectedCategory === 'Semua' || book.category === selectedCategory;
+                const q = query.toLowerCase();
+                const matchQuery = book.title.toLowerCase().includes(q) ||
+                                   book.author.toLowerCase().includes(q) ||
+                                   book.rack.toLowerCase().includes(q) ||
+                                   book.category.toLowerCase().includes(q);
+                return matchCategory && matchQuery;
+            });
+
+            document.getElementById('book-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach(book => {
+                    const isBookedByUser = myBookings.some(b => b.bookId === book.id && b.status === 'Active');
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group";
+                    
+                    card.innerHTML = `
+                        <div>
+                            <!-- Cover Placeholder Top Bar -->
+                            <div class="${book.coverColor} h-28 p-4 relative flex items-end justify-between">
+                                <span class="bg-black/30 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded">
+                                    ${book.category}
+                                </span>
+                                <span class="bg-white/90 text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center">
+                                    <i class="fa-solid fa-location-dot text-brand-600 mr-1"></i> Lantai ${book.floor}
+                                </span>
+                            </div>
+
+                            <div class="p-4 space-y-2">
+                                <h3 class="font-bold text-slate-900 text-sm leading-snug group-hover:text-brand-600 transition-colors line-clamp-2">
+                                    ${book.title}
+                                </h3>
+                                <p class="text-xs text-slate-500 font-medium"><i class="fa-regular fa-user mr-1"></i>${book.author}</p>
+                                
+                                <!-- Location Badge Box -->
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 my-2 flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Lokasi Rak</span>
+                                        <span class="font-bold text-brand-900">${book.rack}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Barisan</span>
+                                        <span class="font-semibold text-slate-700">${book.row}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 pt-0 space-y-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-slate-500">Stok: <strong class="text-slate-800">${book.stock}</strong> Tersedia</span>
+                                ${isBookedByUser ? 
+                                    `<span class="text-amber-600 font-bold text-[11px]"><i class="fa-solid fa-clock mr-1"></i>Sudah Dibooking</span>` : 
+                                    `<span class="text-emerald-600 font-semibold text-[11px]"><i class="fa-solid fa-check-circle mr-1"></i>Siap Dipinjam</span>`
+                                }
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openBookModal('${book.id}')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
+                                    Detail & Rak
+                                </button>
+                                <button onclick="triggerBooking('${book.id}')" ${isBookedByUser ? 'disabled' : ''} class="w-full py-2 ${isBookedByUser ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 text-white'} text-xs font-bold rounded-lg shadow-sm transition-colors">
+                                    ${isBookedByUser ? 'Dibooking' : 'Booking'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // SEARCH & FILTER HANDLERS
+        function filterBooks() {
+            const query = document.getElementById('search-input').value;
+            const clearBtn = document.getElementById('btn-clear-search');
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderBooks(query);
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('btn-clear-search').classList.add('hidden');
+            renderBooks();
+        }
+
+        function filterCategory(cat) {
+            selectedCategory = cat;
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.includes(cat)) {
+                    btn.className = "cat-btn active bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all whitespace-nowrap";
+                } else {
+                    btn.className = "cat-btn bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap";
+                }
+            });
+            renderBooks(document.getElementById('search-input').value);
+        }
+
+        function resetFilters() {
+            selectedCategory = 'Semua';
+            document.getElementById('search-input').value = '';
+            filterCategory('Semua');
+        }
+
+        // BOOK DETAIL MODAL
+        function openBookModal(bookId) {
+            const book = booksData.find(b => b.id === bookId);
+            if (!book) return;
+
+            currentActiveBookId = bookId;
+            const isBookedByUser = myBookings.some(b => b.bookId === book.id && b.status === 'Active');
+
+            const content = document.getElementById('modal-book-content');
+            content.innerHTML = `
+                <div class="flex items-start space-x-4 mb-4">
+                    <div class="${book.coverColor} w-24 h-32 rounded-xl flex items-center justify-center text-white text-3xl font-bold shadow-md flex-shrink-0">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 bg-brand-100 text-brand-800 text-[10px] font-bold rounded-full mb-1">
+                            ${book.category}
+                        </span>
+                        <h3 class="font-bold text-slate-900 text-base leading-snug">${book.title}</h3>
+                        <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-user mr-1"></i>${book.author}</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">${book.publisher} (${book.year})</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-b border-slate-100 py-3 my-4">
+                    <h4 class="text-xs font-bold text-slate-700 mb-1">Sinopsis Buku:</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">${book.synopsis}</p>
+                </div>
+
+                <!-- EXACT RACK LOCATION HIGHLIGHT BOX -->
+                <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 mb-5">
+                    <div class="flex items-center space-x-2 text-amber-800 text-xs font-bold mb-2">
+                        <i class="fa-solid fa-map-pin text-amber-600 text-sm"></i>
+                        <span>PETUNJUK PRESI LOKASI BUKU DI PERPUSTAKAAN</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-white p-2.5 rounded-lg border border-amber-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-semibold">LANTAI</span>
+                            <span class="text-sm font-extrabold text-slate-800">Lantai ${book.floor}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-amber-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-semibold">NOMOR RAK</span>
+                            <span class="text-sm font-extrabold text-brand-600">${book.rack}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-amber-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-semibold">BARISAN</span>
+                            <span class="text-sm font-extrabold text-slate-800">${book.row}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <button onclick="closeBookModal(); switchTab('map'); switchFloor(${book.floor});" class="text-xs font-semibold text-brand-600 hover:text-brand-800">
+                        <i class="fa-solid fa-compass mr-1"></i>Lihat Posisi di Denah
+                    </button>
+
+                    <button onclick="closeBookModal(); triggerBooking('${book.id}')" ${isBookedByUser ? 'disabled' : ''} class="px-5 py-2.5 ${isBookedByUser ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 text-white'} text-xs font-bold rounded-xl shadow transition-colors">
+                        ${isBookedByUser ? 'Sudah Dibooking' : '<i class="fa-solid fa-calendar-plus mr-1.5"></i>Booking Buku Ini'}
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('modal-book-detail').classList.remove('hidden');
+        }
+
+        function closeBookModal() {
+            document.getElementById('modal-book-detail').classList.add('hidden');
+        }
+
+        // BOOKING PROCESS HANDLERS
+        function triggerBooking(bookId) {
+            const book = booksData.find(b => b.id === bookId);
+            if (!book) return;
+
+            currentActiveBookId = bookId;
+            const summary = document.getElementById('booking-target-summary');
+            summary.innerHTML = `
+                <div class="${book.coverColor} w-10 h-12 rounded flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <h4 class="text-xs font-bold text-slate-900 truncate">${book.title}</h4>
+                    <p class="text-[11px] text-slate-500 truncate">${book.rack} &bull; ${book.row}</p>
+                </div>
+            `;
+
+            document.getElementById('modal-booking-form').classList.remove('hidden');
+        }
+
+        function closeBookingFormModal() {
+            document.getElementById('modal-booking-form').classList.add('hidden');
+        }
+
+        function handleBookingSubmit(e) {
+            e.preventDefault();
+            const book = booksData.find(b => b.id === currentActiveBookId);
+            if (!book) return;
+
+            const nama = document.getElementById('peminjam-nama').value;
+            const memberId = document.getElementById('peminjam-id').value;
+            const tanggal = document.getElementById('peminjam-tanggal').value;
+
+            // Create new Booking Object
+            const bookingCode = 'BK-' + Math.floor(100000 + Math.random() * 900000);
+            const newBooking = {
+                bookingCode: bookingCode,
+                bookId: book.id,
+                bookTitle: book.title,
+                bookAuthor: book.author,
+                floor: book.floor,
+                rack: book.rack,
+                row: book.row,
+                borrowerName: nama,
+                borrowerId: memberId,
+                pickupDate: tanggal,
+                createdAt: new Date().toLocaleDateString('id-ID'),
+                status: 'Active'
+            };
+
+            myBookings.unshift(newBooking);
+            localStorage.setItem('pustaka_bookings', JSON.stringify(myBookings));
+
+            closeBookingFormModal();
+            updateBookingBadge();
+            renderBooks(document.getElementById('search-input').value);
+            showToast('Berhasil melakukan booking buku!', 'success');
+
+            // Redirect to My Bookings Page
+            switchTab('bookings');
+        }
+
+        function cancelBooking(bookingCode) {
+            if (confirm('Apakah Anda yakin ingin membatalkan booking ini?')) {
+                myBookings = myBookings.filter(b => b.bookingCode !== bookingCode);
+                localStorage.setItem('pustaka_bookings', JSON.stringify(myBookings));
+                updateBookingBadge();
+                renderMyBookings();
+                renderBooks(document.getElementById('search-input').value);
+                showToast('Booking berhasil dibatalkan', 'info');
+            }
+        }
+
+        // RENDER MY BOOKINGS TAB
+        function renderMyBookings() {
+            const container = document.getElementById('bookings-container');
+            const emptyState = document.getElementById('empty-bookings');
+            container.innerHTML = '';
+
+            const activeBookings = myBookings.filter(b => b.status === 'Active');
+
+            if (activeBookings.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                activeBookings.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl border border-brand-100 shadow-md p-6 relative overflow-hidden";
+                    
+                    card.innerHTML = `
+                        <!-- Ticket Top Header -->
+                        <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3 mb-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
+                                    TIKET BOOKING DIGITAL
+                                </span>
+                                <span class="text-xs font-mono font-bold text-brand-600">${item.bookingCode}</span>
+                            </div>
+                            <button onclick="cancelBooking('${item.bookingCode}')" class="text-xs text-red-500 hover:text-red-700 font-medium">
+                                Batalkan
+                            </button>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm leading-snug">${item.bookTitle}</h3>
+                                <p class="text-xs text-slate-500">${item.bookAuthor}</p>
+                            </div>
+
+                            <!-- Peminjam Info -->
+                            <div class="text-xs text-slate-600 space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Peminjam:</span>
+                                    <span class="font-semibold text-slate-800">${item.borrowerName} (${item.borrowerId})</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Tgl Pengambilan:</span>
+                                    <span class="font-semibold text-brand-700">${item.pickupDate}</span>
+                                </div>
+                            </div>
+
+                            <!-- Visual Location Card inside Ticket -->
+                            <div class="bg-brand-50 border border-brand-200 rounded-xl p-3 text-center">
+                                <span class="text-[10px] text-brand-600 font-bold tracking-wider block mb-1">PANDUAN LOKASI PENGAMBILAN RAK</span>
+                                <div class="flex justify-center items-center space-x-4 text-xs font-bold text-brand-900">
+                                    <span>Lantai ${item.floor}</span>
+                                    <span>&bull;</span>
+                                    <span class="text-brand-700 font-extrabold">${item.rack}</span>
+                                    <span>&bull;</span>
+                                    <span>${item.row}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Stub Pattern Footer -->
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                            <span>Tunjukkan tiket ini ke petugas</span>
+                            <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-qrcode mr-1"></i>Siap Diambil</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        function updateBookingBadge() {
+            const count = myBookings.filter(b => b.status === 'Active').length;
+            const badge = document.getElementById('booking-badge');
+            const mobBadge = document.getElementById('mob-booking-badge');
+
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+                mobBadge.innerText = count;
+                mobBadge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                mobBadge.classList.add('hidden');
+            }
+        }
+
+        // FLOOR MAP INTERACTION
+        function switchFloor(floorNum) {
+            const floor1Plan = document.getElementById('floor-1-plan');
+            const floor2Plan = document.getElementById('floor-2-plan');
+            const tab1 = document.getElementById('floor-1-tab');
+            const tab2 = document.getElementById('floor-2-tab');
+
+            if (floorNum === 1) {
+                floor1Plan.classList.remove('hidden');
+                floor2Plan.classList.add('hidden');
+                tab1.className = "px-5 py-2.5 font-semibold text-xs border-b-2 border-brand-600 text-brand-600 flex items-center";
+                tab2.className = "px-5 py-2.5 font-semibold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center";
+            } else {
+                floor1Plan.classList.add('hidden');
+                floor2Plan.classList.remove('hidden');
+                tab2.className = "px-5 py-2.5 font-semibold text-xs border-b-2 border-brand-600 text-brand-600 flex items-center";
+                tab1.className = "px-5 py-2.5 font-semibold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center";
+            }
+        }
+
+        function highlightShelf(rackName) {
+            switchTab('catalog');
+            document.getElementById('search-input').value = rackName;
+            filterBooks();
+            showToast(`Menampilkan semua buku di ${rackName}`, 'info');
+        }
+
+        // TOAST NOTIFICATIONS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-800 text-white';
+            if (type === 'success') bg = 'bg-emerald-600 text-white';
+            if (type === 'error') bg = 'bg-red-600 text-white';
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center space-x-2 pointer-events-auto animate-bounce`;
+            toast.innerHTML = `
+                <i class="fa-solid fa-circle-info"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
